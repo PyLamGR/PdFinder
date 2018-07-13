@@ -1,0 +1,130 @@
+import os
+from PyPDF2 import PdfFileReader
+from Objects.pdf import *
+
+
+files = []  # files holds the pdf files found in path
+pdf_files = []  # store pdf objects
+keywords = []
+
+dbg_path = ''  # debugging path
+user_path = None
+
+
+def find_pdf(path, name):
+    """
+    find a specific file (name) in a specific dir (path)
+    if found append in the files list
+    :param path: path to search for pdf files
+    :param name: name of the file to find
+    :return: None
+    """
+    for file in os.listdir(path):
+        if file.endswith('.pdf'):
+            flag = re.search(name, file)
+            if flag:
+                files.append(file)
+    if files:
+        print('Found file in ' + os.getcwd())
+    else:
+        print('Could not files in ' + os.getcwd())
+
+
+def find_pdf_all(path):
+    """
+    mostly used
+    enter a path and append all pdf files in the files list
+    :param path: path to find pdf files
+    :return: None
+    """
+    for file in os.listdir(path):
+        if file.endswith('.pdf'):
+            files.append(file)
+
+    if files:
+        print('Found files in ' + path)
+    else:
+        print('Could not find pdf files in ' + path)
+
+
+def find_every_file():
+    """
+    search every directory in the linux's home folder
+    append all files found in the files list
+    :return: None
+    """
+    status = False
+    for file in os.listdir('/home/'):
+        if file.endswith('.pdf '):
+            files.append(file)
+            status = True
+
+    if status:
+        print('Found pdf files in ' + os.getcwd())
+    else:
+        print('Could not found pdf files in ' + os.getcwd())
+
+
+def print_results(verbose=False):
+    """
+    prints results from the search
+    :param verbose: if True print files with some extra info
+    :return: None
+    """
+    for i in files:
+        print(i)
+
+    if verbose:
+        print('Name\tPages')
+        for file in pdf_files:
+            print(file.name + '\t' + file.pages)
+
+
+def open_pdfs(new_keyword, open_path):
+    """
+    Uses PyPDF2 to open all pdf files and extract text
+    creates PDF object for every file and adds it in the pdf_files list
+    extracts text from every file
+    :param new_keyword: search
+    :param open_path: path to open files
+    :return: None
+    """
+    for i in files:
+        file = open_path
+        pdf = open(file + i, 'rb')
+        pdf_object = PdfFileReader(pdf)
+
+        new_pdf = PDF(i, new_keyword)
+        new_pdf.new_keyword(new_keyword)
+        new_pdf.pages = pdf_object.getNumPages()
+        new_pdf.info = pdf_object.getDocumentInfo()
+
+        for page in range(new_pdf.pages):
+            content = pdf_object.getPage(page)
+            new_pdf.text += content.extractText()
+
+        pdf_files.append(new_pdf)
+        pdf.close()
+
+
+def get_path():
+    new = input('Select path: /home/')
+    if new.endswith('/'):
+        final_new = '/home/' + new
+    else:
+        final_new = '/home/' + new + '/'
+
+    return final_new
+
+
+def extract_s_text(content, field, chapter = 0):
+    """
+    extract specific text from a text content
+    used for scientific papers
+    can be used to extract abstract or a specific chapter
+    :param content: the entire text to search, in this caase the pdf content
+    :param field: the field of the file to search like abstract or keywords
+    :param chapter: a numbered chapter of the file (default 0)
+    :return:None
+    """
+
